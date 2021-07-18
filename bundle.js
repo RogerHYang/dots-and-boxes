@@ -81,14 +81,12 @@ class Board {
   }
 
   handleMouseMove(x, y) {
-    for (const side of this.sides) {
-      side.highlighted = false;
-    }
     for (const box of this.boxes) {
       if (box.containsMousePointer(x, y, this.dim.margin)) {
         const side = box.nearestSide(x, y);
         if (side) {
           side.highlighted = true;
+          document.body.style.cursor = "pointer";
         }
         break;
       }
@@ -144,14 +142,14 @@ class Box {
     const rotatedY = (x + y) / sqrt2;
     const rotatedX = (y - x) / sqrt2;
     // detect quadrant with threshold
-    if (Math.abs(rotatedX) + Math.abs(rotatedY) > this.width / 4) {
+    if (Math.abs(rotatedX) + Math.abs(rotatedY) > this.width / 3) {
       if (rotatedX < 0 && rotatedY > 0) {
-        return this.sideB;
+        return !this.sideB.taken && this.sideB;
       } else if (rotatedX > 0 && rotatedY > 0) {
-        return this.sideC;
+        return !this.sideC.taken && this.sideC;
       } else if (rotatedX > 0 && rotatedY < 0) {
-        return this.sideD;
-      } else return this.sideA;
+        return !this.sideD.taken && this.sideD;
+      } else return !this.sideA.taken && this.sideA;
     }
   }
 
@@ -244,7 +242,7 @@ const Player = require("./player");
 const Color = require("./color");
 
 class Game {
-  constructor(canvas, size = 4) {
+  constructor(canvas, size = 3) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.height = canvas.height;
@@ -276,38 +274,42 @@ class Game {
   }
 
   handleMouseDown(e) {
-    const { offsetX, offsetY } = e;
-    if (this.board.containsMousePointer(offsetX, offsetY)) {
-      const side = this.board.nearestSide(offsetX, offsetY);
-      if (side && !side.taken) {
-        side.taken = true;
-        let points = 0;
-        for (const box of side.boxes) {
-          if (box.owner === undefined && box.isCompleted()) {
-            box.owner = this.players[this.currentPlayerId];
-            points += 1;
-            this.remainingBoxesCount -= 1;
+    if (!this.isOver()) {
+      const { offsetX, offsetY } = e;
+      if (this.board.containsMousePointer(offsetX, offsetY)) {
+        const side = this.board.nearestSide(offsetX, offsetY);
+        if (side && !side.taken) {
+          side.taken = true;
+          let points = 0;
+          for (const box of side.boxes) {
+            if (box.owner === undefined && box.isCompleted()) {
+              box.owner = this.players[this.currentPlayerId];
+              points += 1;
+              this.remainingBoxesCount -= 1;
+            }
           }
-        }
-        this.players[this.currentPlayerId].score += points;
-        if (points === 0) {
-          // switch player
-          this.switched = true;
-          this.currentPlayerId = 1 - this.currentPlayerId;
-        } else {
-          this.switched = false;
+          this.players[this.currentPlayerId].score += points;
+          if (points === 0) {
+            // switch player
+            this.switched = true;
+            this.currentPlayerId = 1 - this.currentPlayerId;
+          } else {
+            this.switched = false;
+          }
         }
       }
     }
   }
 
   handleMouseMove(e) {
-    const { offsetX, offsetY } = e;
-    if (this.board.containsMousePointer(offsetX, offsetY)) {
-      this.board.handleMouseMove(offsetX, offsetY);
-    } else {
+    document.body.style.cursor = "default";
+    if (!this.isOver()) {
+      const { offsetX, offsetY } = e;
       for (const side of this.board.sides) {
         side.highlighted = false;
+      }
+      if (this.board.containsMousePointer(offsetX, offsetY)) {
+        this.board.handleMouseMove(offsetX, offsetY);
       }
     }
   }

@@ -1,1 +1,1 @@
-[](https://fontawesome.com/license)
+[fontawesome.com](https://fontawesome.com/license)
