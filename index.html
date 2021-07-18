@@ -6,31 +6,32 @@
     <link rel="stylesheet" type="text/css" href="index.css" />
     <script src="bundle.js"></script>
   </head>
-  <body
-    style="
-      display: flex;
-      gap: 20px;
-      justify-content: center;
-      align-items: center;
-    "
-  >
+  <body>
     <div class="control-panel">
-      <a href="https://github.com/RogerHYang/dots-and-boxes" target="_blank">
-        <img src="icons/github-square-brands.svg" class="button" />
-      </a>
-      <a href="https://www.linkedin.com/in/roger-y-a35595114/" target="_blank">
-        <img src="icons/linkedin-brands.svg" class="button" />
-      </a>
+      <div class="btn">
+        <a href="https://github.com/RogerHYang/dots-and-boxes" target="_blank">
+          <img src="icons/github-square-brands.svg" />
+        </a>
+      </div>
+      <div class="btn">
+        <a
+          href="https://www.linkedin.com/in/roger-y-a35595114/"
+          target="_blank"
+        >
+          <img src="icons/linkedin-brands.svg" />
+        </a>
+      </div>
     </div>
-    <canvas
-      id="canvas"
-      width="500px"
-      height="600px"
-      style="border: 1px solid #ccc"
-    ></canvas>
+    <canvas id="canvas" width="500px" height="600px"></canvas>
     <div class="control-panel">
-      <img src="icons/power-off-solid.svg" class="button" />
-      <img src="icons/question-circle-regular.svg" class="button" />
+      <div class="btn" id="reset">
+        <img src="icons/power-off-solid.svg" />
+        <span class="tooltiptext">Restart game</span>
+      </div>
+      <div class="btn" id="info">
+        <img src="icons/question-circle-regular.svg" />
+        <span class="tooltiptext">How to play</span>
+      </div>
     </div>
   </body>
 </html>
