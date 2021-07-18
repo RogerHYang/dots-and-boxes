@@ -249,28 +249,33 @@ class Game {
     this.width = canvas.width;
     this.canvas.onmousemove = this.handleMouseMove.bind(this);
     this.canvas.onmousedown = this.handleMouseDown.bind(this);
-    this.size = size;
-    this.remainingBoxesCount = size * size;
     this.marginTop = 150;
     this.margin = 40;
+    this.play = this.play.bind(this);
+    this.restart = this.restart.bind(this);
+    this.initialize({ size });
+  }
+
+  initialize(options) {
+    const { size } = options || {};
+    this.size = size || this.size || 4;
+    this.unclaimedBoxCount = this.size * this.size;
     this.board = new Board(
-      size,
+      this.size,
       this.margin,
       this.marginTop,
       this.width - this.margin * 2
     );
-    this.gameOver = false;
-    this.scores = [0, 0];
-    this.currentPlayerId = 0;
     this.players = [
       new Player("Player A", "A", new Color("orange", 0.8)),
       new Player("Player B", "B", new Color("blue", 0.4)),
     ];
+    this.currentPlayerId = 0;
     this.switched = true;
   }
 
   isOver() {
-    return this.remainingBoxesCount === 0;
+    return this.unclaimedBoxCount === 0;
   }
 
   handleMouseDown(e) {
@@ -285,7 +290,7 @@ class Game {
             if (box.owner === undefined && box.isCompleted()) {
               box.owner = this.players[this.currentPlayerId];
               points += 1;
-              this.remainingBoxesCount -= 1;
+              this.unclaimedBoxCount -= 1;
             }
           }
           this.players[this.currentPlayerId].score += points;
@@ -340,7 +345,7 @@ class Game {
     this.board.draw(ctx);
   }
 
-  play = () => {
+  play() {
     this.ctx.clearRect(0, 0, this.width, this.height);
     this.draw(this.ctx);
     this.drawMessage(this.ctx);
@@ -353,9 +358,15 @@ class Game {
       );
     });
     if (!this.isOver()) {
-      setTimeout(this.play, 16);
+      this.timeOutId = setTimeout(this.play, 16);
     }
-  };
+  }
+
+  restart() {
+    clearTimeout(this.timeOutId);
+    this.initialize();
+    this.play();
+  }
 }
 
 module.exports = Game;
@@ -446,8 +457,16 @@ module.exports = Side;
 },{}],8:[function(require,module,exports){
 const Game = require("./lib/game");
 
+let game;
+
+function startGame() {
+  game = new Game(document.getElementById("canvas"));
+  game.play();
+}
+
 window.onload = function () {
-  new Game(document.getElementById("canvas")).play();
+  startGame();
+  document.getElementById("reset").addEventListener("click", game.restart);
 };
 
 },{"./lib/game":5}]},{},[8]);

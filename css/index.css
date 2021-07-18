@@ -8,6 +8,7 @@ body {
 
 #canvas {
   border: 10px solid #eee;
+  border-radius: 10px;
 }
 
 .control-panel {
