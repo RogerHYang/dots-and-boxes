@@ -99,7 +99,8 @@ button {
   gap: 20px;
 }
 
-.grid-size {
+button.grid-size,
+button.player {
   font-weight: bold;
   border-radius: 4px;
   border: 1px solid black;
@@ -108,7 +109,7 @@ button {
 }
 
 button:hover,
-button.current-size {
+button.selected {
   background-color: black;
   color: white;
 }
@@ -142,4 +143,28 @@ button.disabled,
 button.disabled:hover {
   background-color: transparent;
   color: #ccc;
+}
+
+.player-control {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 20px 0px;
+  font-weight: bold;
+}
+
+.player-column {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  width: 40%;
+}
+
+.player-options {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }

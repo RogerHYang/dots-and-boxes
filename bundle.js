@@ -1,4 +1,53 @@
 (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const Player = require("../player");
+
+class AiGreedy extends Player {
+  constructor(board, name, symbol, color) {
+    super(board, name, symbol, color, true);
+  }
+
+  timeout(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async makeMove() {
+    const priority = { extraHigh: [], high: [], medium: [], low: [] };
+    for (const side of this.board.availableSides()) {
+      let totalCompleteness = 0;
+      let maxCompleteness = 0;
+      for (const box of side.boxes) {
+        const completeness = box.completeness();
+        totalCompleteness += completeness;
+        maxCompleteness = Math.max(maxCompleteness, completeness);
+      }
+      if (maxCompleteness === 2) {
+        priority.low.push(side);
+      } else if (maxCompleteness === 3) {
+        if (totalCompleteness === 6) {
+          priority.extraHigh.push(side);
+        } else {
+          priority.high.push(side);
+        }
+      } else {
+        priority.medium.push(side);
+      }
+    }
+    let side;
+    for (let level of ["extraHigh", "high", "medium", "low"]) {
+      const candidates = priority[level];
+      if (candidates.length > 0) {
+        side = candidates[Math.floor(Math.random() * candidates.length)];
+        break;
+      }
+    }
+    await this.timeout(250);
+    return side;
+  }
+}
+
+module.exports = AiGreedy;
+
+},{"../player":7}],2:[function(require,module,exports){
 const Dot = require("./dot");
 const Side = require("./side");
 const Box = require("./box");
@@ -80,6 +129,10 @@ class Board {
     }
   }
 
+  availableSides() {
+    return this.sides.filter((side) => !side.taken);
+  }
+
   handleMouseMove(x, y) {
     for (const box of this.boxes) {
       if (box.containsMousePointer(x, y, this.dim.margin)) {
@@ -107,7 +160,7 @@ class Board {
 }
 module.exports = Board;
 
-},{"./box":2,"./dot":4,"./side":7}],2:[function(require,module,exports){
+},{"./box":3,"./dot":5,"./side":8}],3:[function(require,module,exports){
 class Box {
   constructor(sideA, sideB, sideC, sideD, id) {
     this.sides = [sideA, sideB, sideC, sideD];
@@ -151,6 +204,10 @@ class Box {
         return !this.sideD.taken && this.sideD;
       } else return !this.sideA.taken && this.sideA;
     }
+  }
+
+  completeness() {
+    return this.sides.reduce((acc, side) => acc + (side.taken ? 1 : 0), 0);
   }
 
   isCompleted() {
@@ -206,7 +263,7 @@ class Box {
 }
 module.exports = Box;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 class Color {
   constructor(rgb, alpha) {
     this.rgb = rgb;
@@ -215,7 +272,7 @@ class Color {
 }
 module.exports = Color;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 class Dot {
   constructor(x, y, id) {
     this.x = x;
@@ -236,9 +293,8 @@ class Dot {
 }
 module.exports = Dot;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 const Board = require("./board");
-const Player = require("./player");
 const Color = require("./color");
 
 class Game {
@@ -260,7 +316,7 @@ class Game {
   }
 
   initialize() {
-    const { size } = this.settings;
+    const { size, playerA, playerB } = this.settings;
     this.size = size;
     this.unclaimedBoxCount = this.size * this.size;
     this.board = new Board(
@@ -270,14 +326,15 @@ class Game {
       this.width - this.margin * 2
     );
     this.players = [
-      new Player("Player A", "A", new Color("orange", 0.8)),
-      new Player("Player B", "B", new Color("blue", 0.4)),
+      new playerA(this.board, "Player A", "A", new Color("orange", 0.8)),
+      new playerB(this.board, "Player B", "B", new Color("blue", 0.4)),
     ];
     this.currentPlayerId = 0;
     this.moves = [];
     this.redos = [];
     document.getElementById("undo").classList.add("disabled");
     document.getElementById("redo").classList.add("disabled");
+    this.makeMove();
   }
 
   isOver() {
@@ -331,39 +388,64 @@ class Game {
   }
 
   handleMouseDown(e) {
-    if (!this.isOver()) {
+    if (!this.isOver() && !this.players[this.currentPlayerId].isComputer) {
       const { offsetX, offsetY } = e;
       if (this.board.containsMousePointer(offsetX, offsetY)) {
         const side = this.board.nearestSide(offsetX, offsetY);
         if (side && !side.taken) {
-          side.taken = true;
           side.highlighted = false;
           document.body.style.cursor = "default";
-          let points = 0;
-          for (const box of side.boxes) {
-            if (box.owner === undefined && box.isCompleted()) {
-              box.owner = this.players[this.currentPlayerId];
-              points += 1;
-              this.unclaimedBoxCount -= 1;
-            }
-          }
-          this.moves.push({ playerId: this.currentPlayerId, side, points });
-          document.getElementById("undo").classList.remove("disabled");
-          this.redos.length = 0;
-          document.getElementById("redo").classList.add("disabled");
-          this.players[this.currentPlayerId].score += points;
-          if (points === 0) {
-            // switch player
-            this.currentPlayerId = 1 - this.currentPlayerId;
-          }
+          this.acceptMove(side);
         }
       }
     }
   }
 
+  acceptMove(side) {
+    side.taken = true;
+    let points = 0;
+    for (const box of side.boxes) {
+      if (box.owner === undefined && box.isCompleted()) {
+        box.owner = this.players[this.currentPlayerId];
+        points += 1;
+        this.unclaimedBoxCount -= 1;
+      }
+    }
+    this.moves.push({ playerId: this.currentPlayerId, side, points });
+    document.getElementById("undo").classList.remove("disabled");
+    this.redos.length = 0;
+    document.getElementById("redo").classList.add("disabled");
+    this.players[this.currentPlayerId].score += points;
+    if (points === 0) {
+      // switch player
+      this.currentPlayerId = 1 - this.currentPlayerId;
+    }
+    this.makeMove();
+  }
+
+  async makeMove() {
+    const currentPlayer = this.players[this.currentPlayerId];
+    if (this.isOver() || !currentPlayer.isComputer) {
+      document.body.style.cursor = "default";
+      if (this.moves.length > 0) {
+        document.getElementById("undo").classList.remove("disabled");
+      }
+      if (this.redos.length > 0) {
+        document.getElementById("redo").classList.remove("disabled");
+      }
+      return;
+    } else {
+      document.body.style.cursor = "wait";
+      document.getElementById("undo").classList.add("disabled");
+      document.getElementById("redo").classList.add("disabled");
+      const side = await currentPlayer.makeMove();
+      this.acceptMove(side);
+    }
+  }
+
   handleMouseMove(e) {
-    document.body.style.cursor = "default";
-    if (!this.isOver()) {
+    if (!this.isOver() && !this.players[this.currentPlayerId].isComputer) {
+      document.body.style.cursor = "default";
       const { offsetX, offsetY } = e;
       for (const side of this.board.sides) {
         side.highlighted = false;
@@ -418,11 +500,12 @@ class Game {
         this.isOver() || this.currentPlayerId === id
       );
     });
-    this.timeOutId = setTimeout(this.play, 16);
+    this.timeOutId = setTimeout(this.play, 16.67);
   }
 
   restart() {
     clearTimeout(this.timeOutId);
+    document.body.style.cursor = "default";
     this.initialize();
     this.play();
   }
@@ -430,13 +513,15 @@ class Game {
 
 module.exports = Game;
 
-},{"./board":1,"./color":3,"./player":6}],6:[function(require,module,exports){
+},{"./board":2,"./color":4}],7:[function(require,module,exports){
 class Player {
-  constructor(name, symbol, color) {
+  constructor(board, name, symbol, color, isComputer = false) {
+    this.board = board;
     this.name = name;
     this.color = color;
     this.symbol = symbol;
     this.score = 0;
+    this.isComputer = isComputer;
   }
 
   drawScore(ctx, x, y, active, h = 70, w = 200, r = 10) {
@@ -478,7 +563,7 @@ class Player {
 }
 module.exports = Player;
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 class Side {
   constructor(dotA, dotB, id) {
     this.dotA = dotA;
@@ -513,21 +598,17 @@ class Side {
 }
 module.exports = Side;
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 const Game = require("./lib/game");
+const Player = require("./lib/player");
+const AiGreedy = require("./lib/ai/greedy");
 
 const SIZE_LIMIT = 6;
-const settings = { size: 4, playerA: "Human", playerB: "Human" };
+const settings = { size: 4, playerA: Player, playerB: AiGreedy };
 const formData = {};
 const sizeOptions = [2, 3, 4, 5, 6];
-const playerTypeOptions = ["Human", "AI"];
-
-let game;
-
-function startGame() {
-  game = new Game(document.getElementById("canvas"), settings);
-  game.play();
-}
+const playerTypelabels = ["Human", "AI: Greedy"];
+const playerTypes = [Player, AiGreedy];
 
 function closeAllModals() {
   Array.from(document.getElementsByClassName("modal")).forEach((modal) =>
@@ -536,7 +617,8 @@ function closeAllModals() {
 }
 
 window.onload = function () {
-  startGame();
+  const game = new Game(document.getElementById("canvas"), settings);
+  game.play();
 
   document.getElementById("undo").addEventListener("click", game.undoMove);
   document.getElementById("redo").addEventListener("click", game.redoMove);
@@ -546,8 +628,29 @@ window.onload = function () {
     document.getElementById("info-modal").classList.remove("hidden");
   });
 
+  ["playerA", "playerB"].forEach((id) => {
+    let el = document.getElementById(id);
+    playerTypes.forEach((player) => {
+      const b = document.createElement("button");
+      b.classList.add("player");
+      b.textContent = `${playerTypelabels[playerTypes.indexOf(player)]}`;
+      b.addEventListener("click", (e) => {
+        formData[id] = player;
+        formData.changed = true;
+        document.getElementById("settings-ok").classList.remove("disabled");
+        Array.from(document.getElementById(id).childNodes).forEach((el, i) => {
+          if (playerTypes[i] === formData[id]) {
+            el.classList.add("selected");
+          } else {
+            el.classList.remove("selected");
+          }
+        });
+      });
+      el.appendChild(b);
+    });
+  });
+
   const gso = document.getElementById("grid-size-options");
-  gso.innerHTML = "";
   sizeOptions.forEach((size) => {
     const b = document.createElement("button");
     b.classList.add("grid-size");
@@ -559,9 +662,9 @@ window.onload = function () {
       Array.from(document.getElementsByClassName("grid-size")).forEach(
         (el, i) => {
           if (sizeOptions[i] === formData.size) {
-            el.classList.add("current-size");
+            el.classList.add("selected");
           } else {
-            el.classList.remove("current-size");
+            el.classList.remove("selected");
           }
         }
       );
@@ -571,12 +674,21 @@ window.onload = function () {
 
   document.getElementById("settings").addEventListener("click", () => {
     Object.assign(formData, settings);
+    ["playerA", "playerB"].forEach((id) => {
+      Array.from(document.getElementById(id).childNodes).forEach((el, i) => {
+        if (playerTypes[i] === formData[id]) {
+          el.classList.add("selected");
+        } else {
+          el.classList.remove("selected");
+        }
+      });
+    });
     Array.from(document.getElementsByClassName("grid-size")).forEach(
       (el, i) => {
         if (sizeOptions[i] === formData.size) {
-          el.classList.add("current-size");
+          el.classList.add("selected");
         } else {
-          el.classList.remove("current-size");
+          el.classList.remove("selected");
         }
       }
     );
@@ -615,4 +727,4 @@ window.onload = function () {
   });
 };
 
-},{"./lib/game":5}]},{},[8]);
+},{"./lib/ai/greedy":1,"./lib/game":6,"./lib/player":7}]},{},[9]);

@@ -1,17 +1,13 @@
 const Game = require("./lib/game");
+const Player = require("./lib/player");
+const AiGreedy = require("./lib/ai/greedy");
 
 const SIZE_LIMIT = 6;
-const settings = { size: 4, playerA: "Human", playerB: "Human" };
+const settings = { size: 4, playerA: Player, playerB: AiGreedy };
 const formData = {};
 const sizeOptions = [2, 3, 4, 5, 6];
-const playerTypeOptions = ["Human", "AI"];
-
-let game;
-
-function startGame() {
-  game = new Game(document.getElementById("canvas"), settings);
-  game.play();
-}
+const playerTypelabels = ["Human", "AI: Greedy"];
+const playerTypes = [Player, AiGreedy];
 
 function closeAllModals() {
   Array.from(document.getElementsByClassName("modal")).forEach((modal) =>
@@ -20,7 +16,8 @@ function closeAllModals() {
 }
 
 window.onload = function () {
-  startGame();
+  const game = new Game(document.getElementById("canvas"), settings);
+  game.play();
 
   document.getElementById("undo").addEventListener("click", game.undoMove);
   document.getElementById("redo").addEventListener("click", game.redoMove);
@@ -30,8 +27,29 @@ window.onload = function () {
     document.getElementById("info-modal").classList.remove("hidden");
   });
 
+  ["playerA", "playerB"].forEach((id) => {
+    let el = document.getElementById(id);
+    playerTypes.forEach((player) => {
+      const b = document.createElement("button");
+      b.classList.add("player");
+      b.textContent = `${playerTypelabels[playerTypes.indexOf(player)]}`;
+      b.addEventListener("click", (e) => {
+        formData[id] = player;
+        formData.changed = true;
+        document.getElementById("settings-ok").classList.remove("disabled");
+        Array.from(document.getElementById(id).childNodes).forEach((el, i) => {
+          if (playerTypes[i] === formData[id]) {
+            el.classList.add("selected");
+          } else {
+            el.classList.remove("selected");
+          }
+        });
+      });
+      el.appendChild(b);
+    });
+  });
+
   const gso = document.getElementById("grid-size-options");
-  gso.innerHTML = "";
   sizeOptions.forEach((size) => {
     const b = document.createElement("button");
     b.classList.add("grid-size");
@@ -43,9 +61,9 @@ window.onload = function () {
       Array.from(document.getElementsByClassName("grid-size")).forEach(
         (el, i) => {
           if (sizeOptions[i] === formData.size) {
-            el.classList.add("current-size");
+            el.classList.add("selected");
           } else {
-            el.classList.remove("current-size");
+            el.classList.remove("selected");
           }
         }
       );
@@ -55,12 +73,21 @@ window.onload = function () {
 
   document.getElementById("settings").addEventListener("click", () => {
     Object.assign(formData, settings);
+    ["playerA", "playerB"].forEach((id) => {
+      Array.from(document.getElementById(id).childNodes).forEach((el, i) => {
+        if (playerTypes[i] === formData[id]) {
+          el.classList.add("selected");
+        } else {
+          el.classList.remove("selected");
+        }
+      });
+    });
     Array.from(document.getElementsByClassName("grid-size")).forEach(
       (el, i) => {
         if (sizeOptions[i] === formData.size) {
-          el.classList.add("current-size");
+          el.classList.add("selected");
         } else {
-          el.classList.remove("current-size");
+          el.classList.remove("selected");
         }
       }
     );
