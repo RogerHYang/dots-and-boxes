@@ -9,5 +9,7 @@ function startGame() {
 
 window.onload = function () {
   startGame();
+  document.getElementById("undo").addEventListener("click", game.undoMove);
+  document.getElementById("redo").addEventListener("click", game.redoMove);
   document.getElementById("reset").addEventListener("click", game.restart);
 };

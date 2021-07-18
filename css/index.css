@@ -24,7 +24,8 @@ body {
   cursor: pointer;
 }
 
-.btn img {
+.btn img,
+.btn.disabled:hover img {
   filter: invert(100%) sepia(0%) saturate(3610%) hue-rotate(202deg)
     brightness(118%) contrast(73%);
 }
@@ -43,41 +44,31 @@ body {
   background: #000;
   color: #fff;
   text-align: center;
-  border-radius: 8px;
-  padding: 10px 20px;
+  border-radius: 10px;
+  padding: 10px 15px;
   line-height: 30px;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: bold;
   position: absolute;
   z-index: 1;
-  left: 0%;
-  width: 80px;
-  margin-left: -35px;
-}
-
-#reset .tooltiptext {
-  bottom: 130%;
-}
-
-#info .tooltiptext {
-  top: 120%;
+  width: 70px;
+  margin-left: 15px;
+  margin-top: -25%;
+  left: 100%;
 }
 
 .btn .tooltiptext::after {
   content: "";
   position: absolute;
-  left: 50%;
-  margin-left: -10px;
   border-width: 10px;
+  margin-left: -10px;
+  margin-top: -10px;
   border-style: solid;
+  right: 100%;
+  top: 50%;
+  border-color: transparent black transparent transparent;
 }
 
-#reset .tooltiptext::after {
-  top: 100%;
-  border-color: black transparent transparent transparent;
-}
-
-#info .tooltiptext::after {
-  bottom: 100%;
-  border-color: transparent transparent black transparent;
+.btn.disabled {
+  cursor: not-allowed;
 }

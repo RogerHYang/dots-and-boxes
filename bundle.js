@@ -242,7 +242,7 @@ const Player = require("./player");
 const Color = require("./color");
 
 class Game {
-  constructor(canvas, size = 3) {
+  constructor(canvas, size = 2) {
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.height = canvas.height;
@@ -253,6 +253,8 @@ class Game {
     this.margin = 40;
     this.play = this.play.bind(this);
     this.restart = this.restart.bind(this);
+    this.undoMove = this.undoMove.bind(this);
+    this.redoMove = this.redoMove.bind(this);
     this.initialize({ size });
   }
 
@@ -271,11 +273,60 @@ class Game {
       new Player("Player B", "B", new Color("blue", 0.4)),
     ];
     this.currentPlayerId = 0;
-    this.switched = true;
+    this.moves = [];
+    this.redos = [];
+    document.getElementById("undo").classList.add("disabled");
+    document.getElementById("redo").classList.add("disabled");
   }
 
   isOver() {
     return this.unclaimedBoxCount === 0;
+  }
+
+  redoMove() {
+    if (this.redos.length > 0) {
+      const { playerId, side, points } = this.redos.pop();
+      if (this.redos.length === 0) {
+        document.getElementById("redo").classList.add("disabled");
+      }
+      this.moves.push({ playerId, side, points });
+      document.getElementById("undo").classList.remove("disabled");
+      side.taken = true;
+      side.highlighted = false;
+      if (points > 0) {
+        this.unclaimedBoxCount -= points;
+        this.players[playerId].score += points;
+        for (const box of side.boxes) {
+          if (box.owner === undefined && box.isCompleted()) {
+            box.owner = this.players[playerId];
+          }
+        }
+        this.currentPlayerId = playerId;
+      } else {
+        this.currentPlayerId = 1 - playerId;
+      }
+    }
+  }
+
+  undoMove() {
+    if (this.moves.length > 0) {
+      const { playerId, side, points } = this.moves.pop();
+      if (this.moves.length === 0) {
+        document.getElementById("undo").classList.add("disabled");
+      }
+      this.redos.push({ playerId, side, points });
+      document.getElementById("redo").classList.remove("disabled");
+      side.taken = false;
+      side.highlighted = false;
+      if (points > 0) {
+        this.unclaimedBoxCount += points;
+        this.players[playerId].score -= points;
+        for (const box of side.boxes) {
+          box.owner = undefined;
+        }
+      }
+      this.currentPlayerId = playerId;
+    }
   }
 
   handleMouseDown(e) {
@@ -293,13 +344,14 @@ class Game {
               this.unclaimedBoxCount -= 1;
             }
           }
+          this.moves.push({ playerId: this.currentPlayerId, side, points });
+          document.getElementById("undo").classList.remove("disabled");
+          this.redos.length = 0;
+          document.getElementById("redo").classList.add("disabled");
           this.players[this.currentPlayerId].score += points;
           if (points === 0) {
             // switch player
-            this.switched = true;
             this.currentPlayerId = 1 - this.currentPlayerId;
-          } else {
-            this.switched = false;
           }
         }
       }
@@ -331,7 +383,13 @@ class Game {
       }
     } else {
       const name = this.players[this.currentPlayerId].name;
-      msg = name + (this.switched ? " to move" : " can move again");
+      let moveAgain = false;
+      if (this.moves.length > 0) {
+        if (this.moves[this.moves.length - 1].points > 0) {
+          moveAgain = true;
+        }
+      }
+      msg = name + (moveAgain ? " can move again" : " to move");
     }
     ctx.globalAlpha = 1;
     ctx.fillStyle = "black";
@@ -357,9 +415,7 @@ class Game {
         this.isOver() || this.currentPlayerId === id
       );
     });
-    if (!this.isOver()) {
-      this.timeOutId = setTimeout(this.play, 16);
-    }
+    this.timeOutId = setTimeout(this.play, 16);
   }
 
   restart() {
@@ -466,6 +522,8 @@ function startGame() {
 
 window.onload = function () {
   startGame();
+  document.getElementById("undo").addEventListener("click", game.undoMove);
+  document.getElementById("redo").addEventListener("click", game.redoMove);
   document.getElementById("reset").addEventListener("click", game.restart);
 };
 
