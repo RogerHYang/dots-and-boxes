@@ -242,7 +242,8 @@ const Player = require("./player");
 const Color = require("./color");
 
 class Game {
-  constructor(canvas, size = 2) {
+  constructor(canvas, options) {
+    this.options = options;
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.height = canvas.height;
@@ -255,12 +256,12 @@ class Game {
     this.restart = this.restart.bind(this);
     this.undoMove = this.undoMove.bind(this);
     this.redoMove = this.redoMove.bind(this);
-    this.initialize({ size });
+    this.initialize(options);
   }
 
-  initialize(options) {
-    const { size } = options || {};
-    this.size = size || this.size || 4;
+  initialize() {
+    const { size } = this.options;
+    this.size = size;
     this.unclaimedBoxCount = this.size * this.size;
     this.board = new Board(
       this.size,
@@ -336,6 +337,7 @@ class Game {
         const side = this.board.nearestSide(offsetX, offsetY);
         if (side && !side.taken) {
           side.taken = true;
+          side.highlighted = false;
           let points = 0;
           for (const box of side.boxes) {
             if (box.owner === undefined && box.isCompleted()) {
@@ -513,10 +515,13 @@ module.exports = Side;
 },{}],8:[function(require,module,exports){
 const Game = require("./lib/game");
 
+const SIZE_LIMIT = 6;
+const options = { size: 3 };
+
 let game;
 
 function startGame() {
-  game = new Game(document.getElementById("canvas"));
+  game = new Game(document.getElementById("canvas"), options);
   game.play();
 }
 
@@ -525,6 +530,26 @@ window.onload = function () {
   document.getElementById("undo").addEventListener("click", game.undoMove);
   document.getElementById("redo").addEventListener("click", game.redoMove);
   document.getElementById("reset").addEventListener("click", game.restart);
+  document.getElementById("upsize").addEventListener("click", () => {
+    if (options.size < SIZE_LIMIT) {
+      options.size += 1;
+      document.getElementById("downsize").classList.remove("disabled");
+      if (options.size === SIZE_LIMIT) {
+        document.getElementById("upsize").classList.add("disabled");
+      }
+      game.restart();
+    }
+  });
+  document.getElementById("downsize").addEventListener("click", () => {
+    if (options.size > 2) {
+      options.size -= 1;
+      document.getElementById("upsize").classList.remove("disabled");
+      if (options.size === 2) {
+        document.getElementById("downsize").classList.add("disabled");
+      }
+      game.restart();
+    }
+  });
 };
 
 },{"./lib/game":5}]},{},[8]);
