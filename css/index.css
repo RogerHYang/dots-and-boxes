@@ -1,4 +1,12 @@
 body {
+  font-family: sans-serif;
+}
+
+button {
+  background-color: transparent;
+}
+
+.game-stage {
   display: flex;
   gap: 20px;
   justify-content: center;
@@ -8,20 +16,25 @@ body {
 
 #canvas {
   border: 10px solid #eee;
-  border-radius: 10px;
 }
 
 .control-panel {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 50px;
   color: rgb(0, 0, 0, 0.2);
 }
 
 .btn {
   position: relative;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.btn img {
+  width: 50px;
+  height: 50px;
 }
 
 .btn img,
@@ -35,10 +48,6 @@ body {
     brightness(103%) contrast(107%);
 }
 
-.btn:hover .tooltiptext {
-  visibility: visible;
-}
-
 .btn .tooltiptext {
   visibility: hidden;
   background: #000;
@@ -46,22 +55,22 @@ body {
   text-align: center;
   border-radius: 10px;
   padding: 10px 15px;
-  line-height: 30px;
+  line-height: 25px;
   font-size: 20px;
   font-weight: bold;
+  display: flex;
+  align-items: center;
   position: absolute;
   z-index: 1;
   min-width: 70px;
   margin-left: 15px;
-  margin-top: -25%;
+  height: 60px;
   left: 100%;
+  top: -15px;
 }
 
-.btn .tooltiptext i {
-  line-height: 12px;
-  font-size: 10px;
-  font-weight: normal;
-  font-style: italic;
+.btn:hover .tooltiptext {
+  visibility: visible;
 }
 
 .btn .tooltiptext::after {
@@ -76,6 +85,61 @@ body {
   border-color: transparent black transparent transparent;
 }
 
-.btn.disabled {
+.grid-size-control {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  gap: 20px;
+  font-weight: bold;
+}
+
+#grid-size-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.grid-size {
+  font-weight: bold;
+  border-radius: 4px;
+  border: 1px solid black;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+button:hover,
+button.current-size {
+  background-color: black;
+  color: white;
+}
+
+.settings-footer {
+  border-top: 1px solid #ccc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+  width: 100%;
+}
+
+.settings-footer button {
+  width: 100px;
+  padding: 10px;
+  border: 1px solid black;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+.btn.disabled,
+button.disabled {
   cursor: not-allowed;
+}
+
+button.disabled,
+button.disabled:hover {
+  background-color: transparent;
+  color: #ccc;
 }

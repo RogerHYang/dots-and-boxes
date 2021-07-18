@@ -4,56 +4,92 @@
     <meta charset="utf-8" />
     <title>Dots & Boxes</title>
     <link rel="stylesheet" type="text/css" href="css/reset.css" />
+    <link rel="stylesheet" type="text/css" href="css/modal.css" />
     <link rel="stylesheet" type="text/css" href="css/index.css" />
     <script src="bundle.js"></script>
   </head>
   <body>
-    <div class="control-panel">
-      <div class="btn">
-        <a href="https://github.com/RogerHYang/dots-and-boxes" target="_blank">
-          <img src="icons/github-square-brands.svg" />
-        </a>
-      </div>
-      <div class="btn">
-        <a
-          href="https://www.linkedin.com/in/roger-y-a35595114/"
-          target="_blank"
-        >
-          <img src="icons/linkedin-brands.svg" />
-        </a>
+    <div id="settings-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">Game Settings</div>
+        <span class="close close-modal">&times;</span>
+        <div>
+          <div class="grid-size-control">
+            <div>Change Grid Size</div>
+            <div id="grid-size-options"></div>
+          </div>
+        </div>
+        <div class="settings-footer">
+          <button class="close-modal">Cancel</button>
+          <button id="settings-ok">OK</button>
+        </div>
       </div>
     </div>
-    <canvas id="canvas" width="500px" height="600px"></canvas>
-    <div class="control-panel">
-      <div class="btn" id="info">
-        <img src="icons/question-circle-regular.svg" />
-        <span class="tooltiptext">How to play</span>
+    <div id="info-modal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">How to Play Dots and Boxes</div>
+        <span class="close close-modal">&times;</span>
+        <div style="padding: 20px; display: flex; align-items: center">
+          <div style="margin-right: 20px; width: 200px">
+            <ul style="display: flex; flex-direction: column; gap: 20px">
+              <li>
+                Two players take turns adding a line between two adjacent dots.
+              </li>
+              <li>
+                The player finishing the 4th side of a box gets one point and
+                takes another turn.
+              </li>
+              <li>
+                The winner is the player with the most points when no more lines
+                can be added.
+              </li>
+            </ul>
+          </div>
+          <div><img src="demo.gif" alt="demo" /></div>
+        </div>
       </div>
-      <div class="btn" id="redo">
-        <img src="icons/redo-solid.svg" />
-        <span class="tooltiptext">Redo move</span>
+    </div>
+    <div class="game-stage">
+      <div class="control-panel">
+        <div class="btn">
+          <a
+            href="https://github.com/RogerHYang/dots-and-boxes"
+            target="_blank"
+          >
+            <img src="icons/github-square-brands.svg" />
+          </a>
+        </div>
+        <div class="btn">
+          <a
+            href="https://www.linkedin.com/in/roger-y-a35595114/"
+            target="_blank"
+          >
+            <img src="icons/linkedin-brands.svg" />
+          </a>
+        </div>
       </div>
-      <div class="btn" id="undo">
-        <img src="icons/undo-solid.svg" />
-        <span class="tooltiptext">Undo move</span>
-      </div>
-      <div class="btn" id="reset">
-        <img src="icons/power-off-solid.svg" />
-        <span class="tooltiptext">Restart game</span>
-      </div>
-      <div class="btn" id="upsize">
-        <img src="icons/chevron-circle-up-solid.svg" />
-        <span class="tooltiptext">
-          Upsize
-          <i>(restarts game)</i>
-        </span>
-      </div>
-      <div class="btn" id="downsize">
-        <img src="icons/chevron-circle-down-solid.svg" />
-        <span class="tooltiptext">
-          Downsize
-          <i>(restarts game)</i>
-        </span>
+      <canvas id="canvas" width="500px" height="600px"></canvas>
+      <div class="control-panel">
+        <div class="btn" id="info">
+          <img src="icons/question-circle-regular.svg" />
+          <div class="tooltiptext">How to Play</div>
+        </div>
+        <div class="btn" id="undo">
+          <img src="icons/undo-solid.svg" />
+          <div class="tooltiptext">Undo Move</div>
+        </div>
+        <div class="btn" id="redo">
+          <img src="icons/redo-solid.svg" />
+          <div class="tooltiptext">Redo Move</div>
+        </div>
+        <div class="btn" id="reset">
+          <img src="icons/power-off-solid.svg" />
+          <div class="tooltiptext">Restart Game</div>
+        </div>
+        <div class="btn" id="settings">
+          <img src="icons/bars-solid.svg" />
+          <div class="tooltiptext">Game Settings</div>
+        </div>
       </div>
     </div>
   </body>
