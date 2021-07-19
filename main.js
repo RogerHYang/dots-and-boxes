@@ -2,7 +2,6 @@ const Game = require("./lib/game");
 const Player = require("./lib/player");
 const AiGreedy = require("./lib/ai/greedy");
 
-const SIZE_LIMIT = 6;
 const settings = { size: 4, playerA: Player, playerB: AiGreedy };
 const formData = {};
 const sizeOptions = [2, 3, 4, 5, 6];
