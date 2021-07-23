@@ -10,7 +10,7 @@ Two players take turns adding a line between two adjacent dots. The player finis
 
 Dots and boxes is built using vanilla JavaScript, HTML, and CSS.
 
-### Making moves, i.e. choosing sides
+### Making moves in game
 
 Players can be both human or AI. When the current player is the computer, the computer player chooses a side and returns it to the game through an async function. For the human player, the game detects the user's mouse movements and clicks and deide which move the human player is making
 
